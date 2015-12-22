@@ -1,0 +1,18 @@
+{
+  "name": "node-python-rpc",
+  "version": "0.0.1",
+  "description": "bridge between node and python",
+  "main": "./src/index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codeskyblue/node-python-rpc"
+  },
+  "author": {
+    "name": "codeskyblue",
+    "url": "https://github.com/codeskyblue"
+  },
+  "dependencies": {
+    "json-rpc2": "^1.0.2"
+  }
+}
