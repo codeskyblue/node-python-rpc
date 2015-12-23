@@ -34,6 +34,7 @@ assert(os.path.basename(os.getcwd()) == path.basename(process.cwd()))
 
 ## Reference
 * <https://github.com/JeanSebTr/node-python>
+* <http://stackoverflow.com/questions/16586640/node-js-async-to-sync>
 
 ## LICENSE
 [MIT](LICENSE)
