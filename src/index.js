@@ -1,15 +1,35 @@
-var PyObject = function(obj){
-	this._obj = obj;
-	// get or set method
+var Proxy = require('node-proxy');
+var rpc = require('json-rpc2');
+var Sync = require('sync');
+
+
+var makePyObject = function(obj){
+    return {
+		// need json-rpc call
+        get: function(receiver, name){
+            return 'hello, ' + name;
+        },
+		// need json-rpc call
+        set: function(receiver, name, value){
+            console.log(name, value)
+            return true;
+        }
+    }
 }
 
-var Connection = function(url){
-	this._url = url;
+
+var Connection = function(config){
+    var config = config || {};
+    this._host = config.host || 'localhost';
+    this._port = config.port || 28642;
+    this._client = rpc.Client.$create(this._port, this._host);
+
 	this.import = function(pkg){
-		// need json-rpc call
-		return new PyObject({
-			name: pkg
-		})
+        var result = this._client.call.sync(null, 'ping', [pkg]) //('ping', [pkg], function(err, result) {
+            //console.log('ping = ' + result);
+        //});
+        return result;
+		return Proxy.create(makePyObject(pkg));
 	}
 }
 
