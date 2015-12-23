@@ -13,7 +13,7 @@ var sync = require('synchronize')
 
 var client = rpc.Client.$create(28642, 'localhost')
 
-var ret = sync.await(client.call('ping', ['PING'], sync.defer()))
+var ret = sync.await(client.call('pyobjcall', ['PING'], sync.defer()))
 console.log(ret)
     //var ret = client.call('ping', ['PING'], function(err, result) {
      //   console.log('ping = ' + result);
