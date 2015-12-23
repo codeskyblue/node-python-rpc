@@ -3,7 +3,11 @@ Node modules which helps call python code in node
 
 Use JSONRPC to communicate nodejs and python.
 
-Still developing.
+Can work now. 
+
+But libs hasn't published to npm and pypi.
+
+This is still a alpha version. I will use it in my work, and it should get better in the future.
 
 ## Install
 ```
@@ -23,7 +27,7 @@ Nodejs code
 
 ```
 // python
-var python = require('node-python-rpc')('localhost:8000');
+var python = require('node-python-rpc')({host: 'localhost', port: 28642});
 var os = python.import('os')
 
 // nodejs

@@ -18,5 +18,6 @@ setup(
       package_data={},
       install_requires=[
           'tornado>=4.1',
+          'tornadorpc>=0.1.7',
           ],
       )

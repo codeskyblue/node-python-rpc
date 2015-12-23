@@ -1,30 +1,45 @@
 var Proxy = require('node-proxy');
 var rpc = require('json-rpc2');
 var deasync = require('deasync');
+var _ = require('underscore');
 
+
+var rpcCallSync = function(client, funcName, args){
+    var res = null;
+    var done = false;
+    client.call(funcName, args, function(err, result) {
+        res = result;
+        done = true;
+    });
+    deasync.loopWhile(function(){ return !done;})
+    return res;
+}
+
+var unwrap = function(client, res){
+    if (res.type === 'function'){
+        return makePyFunction(client, res)
+    }
+    if (res.type === 'object'){
+        return makePyObject(client, res);
+    }
+    if (res.type === 'error'){
+        throw res.value;
+    }
+    return res.value;
+}
+
+var makePyFunction = function(client, obj){
+    return function(){
+        var res = rpcCallSync(client, 'pyobjrun', [obj.value, _.values(arguments)])
+        return unwrap(client, res);
+    }
+}
 
 var makePyObject = function(client, obj){
-    return {
-		// need json-rpc call
+    var handler = {
         get: function(receiver, name){
-            console.log('hello, ' + name + obj.value);
-            return function(){
-                var res = null;
-                var done = false;
-                console.log(client.call)
-                console.log('arguments', arguments, name, obj.value)
-                client.call('pyobjcall', [obj.value, name, []], function(err, result) {
-                    console.log("pyobj", err, result)
-                    console.log('objcall = ' + result);
-                    res = result;
-                    done = true;
-                });
-                deasync.loopWhile(function(){ return !done;})
-                if (res.type !== 'object'){
-                    return res.value;
-                }
-                return makePyObject(client, res);
-            };
+            var res = rpcCallSync(client, 'pyobjget', [obj.value, name]);
+            return unwrap(client, res);
         },
 		// need json-rpc call
         set: function(receiver, name, value){
@@ -32,6 +47,7 @@ var makePyObject = function(client, obj){
             return true;
         }
     }
+    return Proxy.create(handler);
 }
 
 
@@ -43,17 +59,8 @@ var Connection = function(config){
 
     var self = this;
 	this.import = function(pkg){
-        //console.log(deasync(this._client.call)('ping', [pkg]))
-        var res = null;
-        var done = false;
-        this._client.call('pyimport', [pkg], function(err, result) {
-            //console.log('ping = ' + result);
-            res = result;
-            done = true;
-        });
-        deasync.loopWhile(function(){ return !done;});
-        var newClient = rpc.Client.$create(this._port, this._host);
-		return Proxy.create(makePyObject(this._client, res));
+        var res = rpcCallSync(this._client, 'pyimport', [pkg])
+		return makePyObject(this._client, res);
 	}
 }
 

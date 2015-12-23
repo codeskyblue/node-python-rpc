@@ -1,5 +1,6 @@
-import uuid
+# coding: utf-8
 import argparse
+import json
 from tornadorpc.json import JSONRPCHandler
 from tornadorpc import private, start_server
 
@@ -7,57 +8,44 @@ from tornadorpc import private, start_server
 OBJECTS = {}
 OBJECTS['os'] = __import__('os')
 
-def remote_import(package_name):
-    obj = __import__(package_name)
-    uniq_key = str(uuid.uuid4())
+
+def wrap(obj):
+    # if isinstance(obj, basestring):
+    #     return dict(type='string', value=obj)
+
+    # if isinstance(obj, list) or isinstance(obj, tuple):
+    #     return dict(type='array', value=obj)
+    try:
+        json.dumps(obj)
+        return dict(type='json', value=obj)
+    except:
+        pass
+        
+    uniq_key = id(obj)
     OBJECTS[uniq_key] = obj
-    return {
-        'type': 'object',
-        'value': uniq_key,
-    }
-
-def object_call(obj_key, func_name, args=[], kwargs={}):
-    obj = OBJECTS.get(obj_key)
-    if not obj:
-        return None
-    if not args:
-        args = []
-    if not kwargs:
-        kwargs = {}
-
-    ret = getattr(obj, func_name)(*args, **kwargs)
-    print 'ret =', ret, isinstance(ret, basestring)
-    if isinstance(ret, basestring):
-        ret_type = 'string'
-        value = ret
-    elif isinstance(ret, list) or isinstance(ret, tuple):
-        ret_type = 'array'
-        value = ret
-    else:
-        ret_type = 'object'
-        uniq_key = str(uuid.uuid4())
-        OBJECTS[uniq_key] = obj
-        value = uniq_key
-
-    print value
-    return {
-        'type': ret_type,
-        'value': value,
-    }
+    print id(obj), type(obj)
+    if callable(obj):
+        return dict(type='function', value=uniq_key)
+    return dict(type='object', value=uniq_key)
 
 
 class Handler(JSONRPCHandler):
     def pyimport(self, package_name):
-        return remote_import(package_name)
+        obj = __import__(package_name)
+        uniq_key = id(obj)
+        OBJECTS[uniq_key] = obj
+        return dict(type='object', value=uniq_key)
 
-    def pyobjcall(self, key, func_name, args):
-        print 'call', key
-        ret = object_call(key, func_name, args)
-        print ret
-        return ret
+    def pyobjget(self, key, attr):
+        try:
+            ret = getattr(OBJECTS[key], attr)
+        except Exception as e:
+            return dict(type='error', value=str(e))
+        return wrap(ret)
 
-    def add(self, x, y):
-        return x+y
+    def pyobjrun(self, key, args=[], kwargs={}):
+        ret = OBJECTS[key](*args, **kwargs)
+        return wrap(ret)
 
     def ping(self, obj):
         return obj

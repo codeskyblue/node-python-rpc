@@ -1,3 +1,4 @@
+"use strict"
 /*
  * test.js
  * Copyright (C) 2015 hzsunshx <hzsunshx@onlinegame-14-51>
@@ -6,14 +7,14 @@
  */
 
 
-var Proxy = require('node-proxy');
-var rpc = require('json-rpc2');
-var sync = require('synchronize')
+var python = require('.')();
+
+var os = python.import('os');
+
+console.log("GOOD: import os")
 
 
-var client = rpc.Client.$create(28642, 'localhost')
-
-var ret = sync.await(client.call('pyobjcall', ['PING'], sync.defer()))
-console.log(ret)
-    //var ret = client.call('ping', ['PING'], function(err, result) {
-     //   console.log('ping = ' + result);
+var getcwd = os.getcwd;
+console.log(getcwd())
+console.log(os.path.sep)
+// console.log("GOOD: call getcwd")
